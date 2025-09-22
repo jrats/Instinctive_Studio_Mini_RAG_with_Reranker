@@ -31,11 +31,11 @@ def create_schema(conn):
     #Chunks Table
     c.execute("""
     CREATE TABLE IF NOT EXISTS chunks(
-            id INTEGER PRIMARY KEY AUTOCORRECT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             doc_index INTEGER,
             title TEXT,
             url TEXT,
-            chunk TEXT,
+            chunk_text TEXT,
             page_n INTEGER
         )
     """)
@@ -70,7 +70,7 @@ def fetch_chunks_by_ids(conn, ids: List[int]):
         return []
     placeholder = ",".join("?" for _ in ids) #to accomodate multiple ids if entered
     c = conn.cursor()
-    q = f"SELECT id, doc_index, title, url, chunk_text, FROM chunks WHERE id IN ({placeholder})"
+    q = f"SELECT id, doc_index, title, url, chunk_text FROM chunks WHERE id IN ({placeholder})"
     rows = c.execute(q, ids).fetchall()
     rowmap = {r["id"]: r for r in rows}
     return [rowmap[i] for i in ids if i in rowmap]

@@ -1,25 +1,21 @@
 """
 Search most similar vector using the FAISS index and chunks stored in SQLite
 """
-import argparse
 import faiss
 from sentence_transformers import SentenceTransformer
-import utils
+import utils, config
 
-TOP_SIM_THRESHOLD = 0.62
-MIN_SENTENCE_OVERLAP = 0.15
-
-def search(query: str, db_path: str, index_path: str, k: int = 3):
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+def search(query: str, k: int = config.TOP_K):
+    model = SentenceTransformer(config.EMBED_MODEL)
     q_vec = model.encode([query]).astype("float32")
 
     #Normalise the query embedding
     faiss.normalize_L2(q_vec)
 
-    index = faiss.read_index(index_path)
+    index = faiss.read_index(config.FAISS_INDEX_PATH)
     D, I = index.search(q_vec, k)
 
-    conn = utils.connect_db(db_path)
+    conn = utils.connect_db(config.SQLITE_PATH)
     ids = [int(idx) for idx in I[0] if idx != -1]
     rows = utils.fetch_chunks_by_ids(conn, ids)
     rowmap = {r["id"]: r for r in rows}
@@ -37,9 +33,9 @@ def search(query: str, db_path: str, index_path: str, k: int = 3):
             if ov > best_overlap:
                 best_overlap, best_sentence = ov, s
         
-        if score < TOP_SIM_THRESHOLD:
+        if score < config.TOP_SIM_THRESHOLD:
             answer = None
-        elif best_sentence and best_overlap >= MIN_SENTENCE_OVERLAP:
+        elif best_sentence and best_overlap >= config.MIN_SENTENCE_OVERLAP:
             answer = best_sentence.strip()
         else:
             answer = chunk["chunk_text"].strip()[:400].rsplit(".", 1)[0]
@@ -56,16 +52,6 @@ def search(query: str, db_path: str, index_path: str, k: int = 3):
     conn.close()
     return results
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--db", default="artifacts/chunks.sqlite")
-    parser.add_argument("--index", default="artifacts/faiss_index.index")
-    parser.add_argument("--query", required=True)
-    parser.add_argument("--k", type=int, default=3)
-    args = parser.parse_args()
-
-    res = search(args.query, args.db, args.index, args.k)
-    
 
 
 

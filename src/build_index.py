@@ -1,36 +1,52 @@
 """
 Build FAISS vector index from chunks stored in SQLite database
 """
-import argparse
+import os
 import faiss
+import random
+import torch
 import numpy as np
 from sentence_transformers import SentenceTransformer
-import utils
+import utils, config
 
-def build_faiss(db_path: str, out_path: str, embed_model: str = "all-MiniLM-L6-v2"):
-    conn = utils.connect_db(db_path)
+# seeting seeds
+random.seed(config.SEED)
+np.random.seed(config.SEED)
+torch.manual_seed(config.SEED)
+
+def build_faiss():
+    conn = utils.connect_db(config.SQLITE_PATH)
     rows = conn.execute("SELECT id, chunk_text FROM chunks").fetchall()
 
-    model = SentenceTransformer(embed_model)
-    texts = [row["chunk_text"] for row in rows]
-    embeddings = model.encode(texts, convert_to_numpy=True).astype("float32") #faiss takes float32 vectors
+    if not rows:
+        raise RuntimeError("No chunks found in database. Did you run ingest.py?")
 
-    #Normalising embeddings for cosine similarity
-    faiss.mormalize_L2(embeddings)
+    model = SentenceTransformer(config.EMBED_MODEL)
+    texts = [row["chunk_text"] for row in rows]
+    embeddings = model.encode(texts, convert_to_numpy=True).astype("float32")
+
+    # Normalize for cosine similarity
+    faiss.normalize_L2(embeddings)
 
     index = faiss.IndexIDMap(faiss.IndexFlatIP(embeddings.shape[1]))
     index.add_with_ids(embeddings, np.array([row["id"] for row in rows]))
 
-    faiss.write_index(index, out_path)
-    print(f"FAISS index built at {out_path}, {len(rows)} vectors.")
+    # Ensure artifacts folder exists
+    index_dir = os.path.dirname(config.FAISS_INDEX_PATH)
+    if index_dir:
+        os.makedirs(index_dir, exist_ok=True)
+
+    faiss.write_index(index, config.FAISS_INDEX_PATH)
+
+    print(f"FAISS index built at {config.FAISS_INDEX_PATH}, {len(rows)} vectors.")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--db", default="artifacts/chunks.sqlite")
-    parser.add_argument("--out", default="artifacts/faiss_index.index")
-    parser.add_argument("--model", default="all-MiniLM-L6-v2")
-    args = parser.parse_args()
+    try:
+        build_faiss()
+    except Exception as e:
+        print(f"Error during index build: {e}")
+        raise
 
-    build_faiss(args.db, args.out, args.model)
-    
+
 
