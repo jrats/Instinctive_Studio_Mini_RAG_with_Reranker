@@ -11,7 +11,7 @@ CHUNK_OVERLAP = 50
 
 # search
 TOP_K = 3
-TOP_SIM_THRESHOLD = 0.62
+TOP_SIM_THRESHOLD = 0.70
 MIN_SENTENCE_OVERLAP = 0.15
 
 # setting seed to make answers deterministic
