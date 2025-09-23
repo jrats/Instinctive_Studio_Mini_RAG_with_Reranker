@@ -1,0 +1,10 @@
+#folders
+artifacts/
+data/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/

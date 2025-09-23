@@ -1,0 +1,9 @@
+langchain
+langchain_community
+faiss-cpu
+sentence_transformers
+fastapi
+uvicorn
+pymupdf
+rank_bm25
+torch
