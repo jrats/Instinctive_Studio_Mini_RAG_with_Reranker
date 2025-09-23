@@ -1,8 +1,0 @@
-"What are the main safety objectives of ISO 10218 Parts 1 and 2 in industrial robot systems?", 
-"What is a Performance Level (PL) in functional safety, and why is it important?", 
-"Name two basic methods for machine guarding according to OSHA.", 
-"What is SISTEMA used for in evaluating machinery safety functions?", 
-"How do EN ISO 13849-1 and IEC 62061 differ in their approaches to safety-related control systems?", 
-"Under the EU Machinery Regulation 2023/1230, what role do “safety components” play in achieving conformity assessment?", 
-"Does ISO 10218 include standards for kitchen food safety and hygiene when using robotic arms?", 
-"What are the top 10 most popular robots in science fiction movies?"
