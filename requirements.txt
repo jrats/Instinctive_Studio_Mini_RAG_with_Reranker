@@ -6,4 +6,5 @@ fastapi
 uvicorn
 pymupdf
 rank_bm25
-torch
+torch>=2.0.0
+requests
